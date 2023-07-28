@@ -2,15 +2,22 @@ package com.example.picture_frame
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.picture_frame.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+    private val imageLoadLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uriList ->
+        updateImages(uriList)
+    }
     lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         }.show()
     }
     private fun loadImage() {
-        Toast.makeText(this, "이미지를 가져올 예정", Toast.LENGTH_SHORT).show()
+        imageLoadLauncher.launch("image/*")
     }
 
     private fun requestReadExternalStorage() {
@@ -60,6 +67,26 @@ class MainActivity : AppCompatActivity() {
             arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
             REQUEST_READ_EXTERNAL_STORAGE
         )
+    }
+
+    private fun updateImages(uriList : List<Uri>) {
+        Log.i("updatedImage" , "$uriList")
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when(requestCode) {
+            REQUEST_READ_EXTERNAL_STORAGE -> {
+                if(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+                    loadImage()
+                }
+            }
+        }
     }
 
     companion object {
